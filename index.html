@@ -111,9 +111,12 @@
             </div>
             
             <!-- Columna de la Gráfica -->
-            <div class="bg-white p-4 rounded-lg border">
+            <div class="bg-white p-4 rounded-lg border flex flex-col">
                 <h2 class="text-xl font-semibold mb-4 text-center">Curva Potencia-Duración</h2>
-                <canvas id="powerChart" height="300"></canvas>
+                <!-- Contenedor para la gráfica con altura y posición relativas -->
+                <div class="relative h-80 w-full">
+                    <canvas id="powerChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -312,9 +315,7 @@ function updateChart(CP, Wbal, times, powers) {
                 y: {
                     title: {display: true, text: 'Potencia (W)', font: {size: 14}},
                     beginAtZero: true,
-                    // ---- INICIO DE LA MODIFICACIÓN ----
-                    max: 1200 // Limita el eje Y a un máximo de 1200W
-                    // ---- FIN DE LA MODIFICACIÓN ----
+                    max: 1200
                 }
             }
         }
