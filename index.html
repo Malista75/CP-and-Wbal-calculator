@@ -1,326 +1,395 @@
-<!DOCTYPE html>
-<html lang="es">
+
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Potencia y Velocidad Crítica</title>
-    <!-- Carga de Tailwind CSS para estilos rápidos -->
+    <title>Critical Power & Speed Calculator</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carga de Chart.js para las gráficas -->
+    <!-- Chart.js for graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Estilos personalizados -->
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Custom Styles (matching PaceAndPower page) -->
     <style>
-        .header-bg {
-            background-image: url('https://images.unsplash.com/photo-1600524842892-a0e24f574f91?ixlib=rb-1.2.1&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            position: relative;
+        body {
+            font-family: 'Inter', sans-serif;
         }
-        .header-bg::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1;
+        .gradient-text {
+            background: linear-gradient(to right, #34D399, #3B82F6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .header-content {
-            position: relative;
-            z-index: 2;
+        .input-dark {
+            background-color: #374151;
+            border: 1px solid #4B5563;
+            color: #F3F4F6;
+        }
+        .input-dark::placeholder {
+            color: #9CA3AF;
+        }
+        .input-dark:focus {
+            ring-color: #3B82F6;
+            border-color: #3B82F6;
+        }
+        .card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 1rem;
+            padding: 2rem;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans">
-    <!-- Sección de Cabecera -->
-    <div class="header-bg mb-6">
-        <div class="header-content max-w-4xl mx-auto py-10 px-6 text-center">
-            <h1 class="text-4xl font-bold text-white mb-4">Calculadora de Potencia y Velocidad Crítica</h1>
-            <p class="text-white text-lg">Calcula CP, W', CS, y estima tus ritmos de carrera</p>
-        </div>
-    </div>
+<body class="bg-gray-900 text-gray-200 min-h-screen font-sans">
 
-    <!-- Interfaz de la Calculadora -->
-    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6 mb-6">
-        <!-- Div para mostrar mensajes de error -->
-        <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
+    <!-- Header Section -->
+    <header class="text-center py-16 px-4">
+        <h1 class="text-5xl md:text-6xl font-black tracking-tight">
+            <span class="gradient-text">Critical Power Calculator</span>
+        </h1>
+        <p class="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
+            Calculate your Critical Power (CP), W' Balance, and Critical Speed (CS) to estimate your race paces.
+        </p>
+         <div class="mt-8">
+            <a href="https://malista75.github.io/GAPandPower-GarminIQ/" target="_blank" class="text-blue-400 hover:text-blue-500 font-semibold py-3 px-8 text-lg transition-colors">
+                &larr; Back to GAPandPower App Info
+            </a>
+        </div>
+    </header>
+
+    <!-- Calculator Interface -->
+    <main class="max-w-4xl mx-auto bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 mb-12 border border-gray-700">
+        <!-- Error Message Div -->
+        <div id="error-message" class="hidden bg-red-900 border border-red-700 text-red-300 px-4 py-3 rounded-lg relative mb-6" role="alert">
             <strong class="font-bold">Error:</strong>
             <span class="block sm:inline" id="error-text"></span>
         </div>
 
-        <!-- Input de Masa Corporal -->
-        <div class="mb-6">
-            <label for="mass" class="block text-gray-700 mb-2 font-semibold">Masa del Corredor (kg)</label>
-            <input type="number" id="mass" min="30" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Ej: 60">
+        <!-- Runner's Mass Input -->
+        <div class="mb-8">
+            <label for="mass" class="block text-gray-300 mb-2 font-semibold">Runner's Mass (kg)</label>
+            <input type="number" id="mass" min="30" class="w-full p-3 border rounded-lg focus:ring-2 input-dark" placeholder="e.g., 60">
         </div>
 
-        <!-- Inputs de los Tests -->
+        <!-- Test Inputs -->
         <div class="grid md:grid-cols-3 gap-6 mb-8">
             <!-- Test 1 -->
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <h3 class="font-semibold mb-3 text-gray-800">Test 1</h3>
+            <div class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                <h3 class="font-semibold mb-3 text-gray-200">Test 1</h3>
                 <div class="space-y-4">
-                    <input type="number" id="power1" min="5" class="w-full p-2 border rounded" placeholder="Potencia (W)">
-                    <input type="number" id="time1" min="5" class="w-full p-2 border rounded" placeholder="Tiempo (seg)">
+                    <input type="number" id="power1" min="5" class="w-full p-2 border rounded-md input-dark" placeholder="Power (W)">
+                    <input type="number" id="time1" min="5" class="w-full p-2 border rounded-md input-dark" placeholder="Time (sec)">
                 </div>
             </div>
             <!-- Test 2 -->
-            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-                <h3 class="font-semibold mb-3 text-gray-800">Test 2</h3>
+            <div class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                <h3 class="font-semibold mb-3 text-gray-200">Test 2</h3>
                 <div class="space-y-4">
-                    <input type="number" id="power2" min="5" class="w-full p-2 border rounded" placeholder="Potencia (W)">
-                    <input type="number" id="time2" min="5" class="w-full p-2 border rounded" placeholder="Tiempo (seg)">
+                    <input type="number" id="power2" min="5" class="w-full p-2 border rounded-md input-dark" placeholder="Power (W)">
+                    <input type="number" id="time2" min="5" class="w-full p-2 border rounded-md input-dark" placeholder="Time (sec)">
                 </div>
             </div>
             <!-- Test 3 -->
-            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                <h3 class="font-semibold mb-3 text-gray-800">Test 3</h3>
+            <div class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                <h3 class="font-semibold mb-3 text-gray-200">Test 3</h3>
                 <div class="space-y-4">
-                    <input type="number" id="power3" min="5" class="w-full p-2 border rounded" placeholder="Potencia (W)">
-                    <input type="number" id="time3" min="5" class="w-full p-2 border rounded" placeholder="Tiempo (seg)">
+                    <input type="number" id="power3" min="5" class="w-full p-2 border rounded-md input-dark" placeholder="Power (W)">
+                    <input type="number" id="time3" min="5" class="w-full p-2 border rounded-md input-dark" placeholder="Time (sec)">
                 </div>
             </div>
         </div>
 
-        <!-- Botón de Calcular -->
+        <!-- Calculate Button -->
         <div class="flex justify-center mb-8">
-            <button onclick="calculateCP()" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-md">
-                Calcular
+            <button onclick="calculateCP()" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-md transform hover:scale-105">
+                Calculate
             </button>
         </div>
 
-        <!-- Sección de Resultados y Gráfica -->
+        <!-- Results and Chart Section -->
         <div id="resultsSection" class="grid md:grid-cols-2 gap-8 hidden">
-            <!-- Columna de Métricas y Precisión -->
-            <div>
-                <div class="bg-gray-50 p-6 rounded-lg border">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-900">Resultados</h2>
-                    <div class="space-y-3 text-lg">
-                        <p>Potencia Crítica (CP): <span id="cpResult" class="font-bold text-blue-600">-</span> W</p>
-                        <p>W'bal: <span id="wbalResult" class="font-bold text-green-600">-</span> kJ</p>
-                        <p>Velocidad Crítica (CS): <span id="csResult" class="font-bold text-blue-600">-</span> m/s</p>
-                        <p>Ritmo de CS: <span id="paceResult" class="font-bold text-green-600">-</span> min/km</p>
-                    </div>
-                    <div class="mt-6 pt-4 border-t border-gray-200">
-                        <h3 class="font-semibold mb-2 text-gray-900">Precisión del Modelo</h3>
-                        <p>R² (Ajuste del modelo): <span id="r2Result" class="font-bold text-purple-600">-</span></p>
-                        <p>Error Estándar: <span id="seResult" class="font-bold text-purple-600">-</span> W</p>
-                    </div>
+            <!-- Metrics and Accuracy Column -->
+            <div class="card">
+                <h2 class="text-xl font-semibold mb-4 text-white">Results</h2>
+                <div class="space-y-3 text-lg text-gray-300">
+                    <p>Critical Power (CP): <span id="cpResult" class="font-bold text-blue-400">-</span> W</p>
+                    <p>W' Balance: <span id="wbalResult" class="font-bold text-green-400">-</span> kJ</p>
+                    <p>Critical Speed (CS): <span id="csResult" class="font-bold text-blue-400">-</span> m/s</p>
+                    <p>CS Pace: <span id="paceResult" class="font-bold text-green-400">-</span> min/km</p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-gray-700">
+                    <h3 class="font-semibold mb-2 text-white">Model Accuracy</h3>
+                    <p class="text-gray-300">R² (Model Fit): <span id="r2Result" class="font-bold text-purple-400">-</span></p>
+                    <p class="text-gray-300">Standard Error: <span id="seResult" class="font-bold text-purple-400">-</span> W</p>
                 </div>
             </div>
-            
-            <!-- Columna de la Gráfica -->
-            <div class="bg-white p-4 rounded-lg border flex flex-col">
-                <h2 class="text-xl font-semibold mb-4 text-center">Curva Potencia-Duración</h2>
-                <!-- Contenedor para la gráfica con altura y posición relativas -->
+
+            <!-- Chart Column -->
+            <div class="card flex flex-col">
+                <h2 class="text-xl font-semibold mb-4 text-center text-white">Power-Duration Curve</h2>
                 <div class="relative h-80 w-full">
                     <canvas id="powerChart"></canvas>
                 </div>
             </div>
         </div>
-    </div>
-    
-<script>
-let powerChart = null;
-const errorDiv = document.getElementById('error-message');
-const errorText = document.getElementById('error-text');
+    </main>
 
-/**
- * Muestra un mensaje de error en la página.
- * @param {string} message - El mensaje de error a mostrar.
- */
-function showError(message) {
-    errorText.textContent = message;
-    errorDiv.classList.remove('hidden');
-}
+    <!-- NEW: Explanation Section -->
+    <section id="explanation" class="max-w-4xl mx-auto px-4 py-12">
+        <h2 class="text-4xl font-bold text-center mb-10">Understanding Your Results</h2>
+        <div class="space-y-10">
+            <!-- Critical Power Explanation -->
+            <div class="card">
+                <h3 class="text-2xl font-bold mb-3 gradient-text">What is Critical Power (CP)?</h3>
+                <p class="text-gray-300 text-lg leading-relaxed">
+                    Think of Critical Power as your <strong class="text-white">"forever pace"</strong> in terms of power output. It's the highest intensity you can theoretically maintain for a very long time (over 30 minutes) without fatiguing. It marks the boundary between sustainable aerobic running and unsustainable anaerobic running.
+                </p>
+                <ul class="list-disc list-inside mt-4 space-y-2 text-gray-300">
+                    <li>Running <strong class="text-green-400">below</strong> your CP is sustainable and primarily uses your aerobic system.</li>
+                    <li>Running <strong class="text-red-400">above</strong> your CP is unsustainable and starts to burn through your limited anaerobic energy stores.</li>
+                </ul>
+                <p class="text-gray-400 mt-4">Knowing your CP is crucial for pacing long-distance races like half-marathons and marathons, ensuring you don't go out too hard.</p>
+            </div>
+            <!-- W' Balance Explanation -->
+            <div class="card">
+                <h3 class="text-2xl font-bold mb-3 gradient-text">What is W' Balance (W')?</h3>
+                <p class="text-gray-300 text-lg leading-relaxed">
+                    If CP is your forever pace, W' (pronounced "W prime") is your <strong class="text-white">"matchbook"</strong>. It represents a fixed, finite amount of energy you have available for efforts *above* your Critical Power.
+                </p>
+                 <ul class="list-disc list-inside mt-4 space-y-2 text-gray-300">
+                    <li>Every time you surge, sprint, or climb a hill faster than your CP, you <strong class="text-red-400">"burn a match"</strong> and use up some of your W'.</li>
+                    <li>When your W' runs out, you are exhausted and forced to slow down below your CP to recover.</li>
+                    <li>When you run below CP, you slowly <strong class="text-green-400">"get your matches back"</strong> as your W' recharges.</li>
+                </ul>
+                <p class="text-gray-400 mt-4">W' is key for understanding your capacity for sprints, surges, and short, hard efforts. A larger W' means you have a bigger anaerobic "gas tank".</p>
+            </div>
+        </div>
+    </section>
+    <!-- End of New Section -->
 
-/**
- * Oculta el mensaje de error.
- */
-function hideError() {
-    errorDiv.classList.add('hidden');
-}
 
-/**
- * Valida que todos los campos de entrada contengan valores válidos.
- * @returns {boolean} - Verdadero si todas las entradas son válidas, falso en caso contrario.
- */
-function validateInputs() {
-    const inputs = [
-        { el: document.getElementById('mass'), name: 'Masa', min: 30 },
-        { el: document.getElementById('power1'), name: 'Potencia 1', min: 5 },
-        { el: document.getElementById('time1'), name: 'Tiempo 1', min: 5 },
-        { el: document.getElementById('power2'), name: 'Potencia 2', min: 5 },
-        { el: document.getElementById('time2'), name: 'Tiempo 2', min: 5 },
-        { el: document.getElementById('power3'), name: 'Potencia 3', min: 5 },
-        { el: document.getElementById('time3'), name: 'Tiempo 3', min: 5 }
-    ];
+    <script>
+        let powerChart = null;
+        const errorDiv = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
 
-    for (const input of inputs) {
-        if (!input.el.value || parseFloat(input.el.value) < input.min) {
-            showError(`Por favor, introduce un valor válido para ${input.name} (mínimo: ${input.min}).`);
-            input.el.classList.add('border-red-500', 'ring-red-500');
-            return false;
+        /**
+         * Displays an error message on the page.
+         * @param {string} message - The error message to display.
+         */
+        function showError(message) {
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
         }
-        input.el.classList.remove('border-red-500', 'ring-red-500');
-    }
 
-    const times = [
-        parseFloat(document.getElementById('time1').value),
-        parseFloat(document.getElementById('time2').value),
-        parseFloat(document.getElementById('time3').value)
-    ];
-    
-    if (new Set(times).size !== 3) {
-        showError('Los tres valores de tiempo deben ser diferentes entre sí.');
-        return false;
-    }
+        /**
+         * Hides the error message.
+         */
+        function hideError() {
+            errorDiv.classList.add('hidden');
+        }
 
-    hideError();
-    return true;
-}
+        /**
+         * Validates that all input fields contain valid values.
+         * @returns {boolean} - True if all inputs are valid, false otherwise.
+         */
+        function validateInputs() {
+            const inputs = [
+                { el: document.getElementById('mass'), name: 'Mass', min: 30 },
+                { el: document.getElementById('power1'), name: 'Power 1', min: 5 },
+                { el: document.getElementById('time1'), name: 'Time 1', min: 5 },
+                { el: document.getElementById('power2'), name: 'Power 2', min: 5 },
+                { el: document.getElementById('time2'), name: 'Time 2', min: 5 },
+                { el: document.getElementById('power3'), name: 'Power 3', min: 5 },
+                { el: document.getElementById('time3'), name: 'Time 3', min: 5 }
+            ];
 
-/**
- * Calcula la Velocidad Crítica (CS) a partir de la Potencia Crítica (CP) y la masa del corredor.
- */
-function calculateCriticalSpeed(CP, mass) {
-    const ECOR = 0.98; // Coste Energético de la Carrera (kJ/kg/km)
-    const Cd = 0.8;
-    const A = 0.45;
-    const rho = 1.225;
-    const ecorJoules = ECOR; // kJ/kg/km es equivalente a J/kg/m
-    const a = 0.5 * Cd * A * rho / mass;
-    const b = ecorJoules;
-    const d = -CP / mass;
-    
-    let v = 4.0;
-    for (let i = 0; i < 10; i++) {
-        const f = a * v * v * v + b * v + d;
-        const df = 3 * a * v * v + b;
-        v = v - f / df;
-    }
-    return v;
-}
+            for (const input of inputs) {
+                if (!input.el.value || parseFloat(input.el.value) < input.min) {
+                    showError(`Please enter a valid value for ${input.name} (minimum: ${input.min}).`);
+                    input.el.classList.add('border-red-500', 'ring-red-500');
+                    return false;
+                }
+                input.el.classList.remove('border-red-500', 'ring-red-500');
+            }
 
-/**
- * Función principal que se ejecuta al hacer clic en el botón "Calcular".
- */
-function calculateCP() {
-    if (!validateInputs()) return;
+            const times = [
+                parseFloat(document.getElementById('time1').value),
+                parseFloat(document.getElementById('time2').value),
+                parseFloat(document.getElementById('time3').value)
+            ];
+            
+            if (new Set(times).size !== 3) {
+                showError('The three time values must be different from each other.');
+                return false;
+            }
 
-    const mass = parseFloat(document.getElementById('mass').value);
-    const powers = [1, 2, 3].map(i => parseFloat(document.getElementById(`power${i}`).value));
-    const times = [1, 2, 3].map(i => parseFloat(document.getElementById(`time${i}`).value));
+            hideError();
+            return true;
+        }
 
-    // Calcula CP y W' usando regresión lineal (modelo Potencia vs 1/Tiempo)
-    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-    const n = times.length;
+        /**
+         * Calculates Critical Speed (CS) from Critical Power (CP) and runner's mass.
+         */
+        function calculateCriticalSpeed(CP, mass) {
+            const ECOR = 0.98; // Energy Cost of Running (kJ/kg/km)
+            const Cd = 0.8;
+            const A = 0.45;
+            const rho = 1.225;
+            const ecorJoules = ECOR; // kJ/kg/km is equivalent to J/kg/m
+            const a = 0.5 * Cd * A * rho / mass;
+            const b = ecorJoules;
+            const d = -CP / mass;
 
-    for(let i = 0; i < n; i++) {
-        const x = 1 / times[i];
-        const y = powers[i];
-        sumX += x;
-        sumY += y;
-        sumXY += x * y;
-        sumX2 += x * x;
-    }
-    
-    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-    
-    const CP = intercept;
-    const Wbal_joules = slope;
-    const Wbal_kj = Wbal_joules / 1000;
+            let v = 4.0; // Initial guess for speed
+            for (let i = 0; i < 10; i++) { // Newton-Raphson method
+                const f = a * v * v * v + b * v + d;
+                const df = 3 * a * v * v + b;
+                v = v - f / df;
+            }
+            return v;
+        }
 
-    const CS = calculateCriticalSpeed(CP, mass);
-    const paceSec = 1000 / CS;
-    const paceMin = Math.floor(paceSec / 60);
-    const paceRemSec = Math.round(paceSec % 60).toString().padStart(2, '0');
-    const pace = `${paceMin}:${paceRemSec}`;
+        /**
+         * Main function executed when the "Calculate" button is clicked.
+         */
+        function calculateCP() {
+            if (!validateInputs()) return;
 
-    // Cálculo de la precisión del modelo
-    const predictedPowers = times.map(t => CP + (Wbal_joules / t));
-    const meanPower = powers.reduce((sum, p) => sum + p, 0) / n;
-    let ssTotal = powers.reduce((sum, p) => sum + Math.pow(p - meanPower, 2), 0);
-    let ssResidual = powers.reduce((sum, p, i) => sum + Math.pow(p - predictedPowers[i], 2), 0);
-    const rSquared = 1 - (ssResidual / ssTotal);
-    const standardError = Math.sqrt(ssResidual / (n - 2));
+            const mass = parseFloat(document.getElementById('mass').value);
+            const powers = [1, 2, 3].map(i => parseFloat(document.getElementById(`power${i}`).value));
+            const times = [1, 2, 3].map(i => parseFloat(document.getElementById(`time${i}`).value));
 
-    // Actualiza los resultados en la interfaz
-    document.getElementById('cpResult').textContent = CP.toFixed(1);
-    document.getElementById('wbalResult').textContent = Wbal_kj.toFixed(1);
-    document.getElementById('csResult').textContent = CS.toFixed(2);
-    document.getElementById('paceResult').textContent = pace;
-    document.getElementById('r2Result').textContent = rSquared.toFixed(3);
-    document.getElementById('seResult').textContent = standardError.toFixed(1);
+            // Calculate CP and W' using linear regression (Power vs. 1/Time model)
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+            const n = times.length;
 
-    document.getElementById('resultsSection').classList.remove('hidden');
-    updateChart(CP, Wbal_joules, times, powers);
-}
+            for (let i = 0; i < n; i++) {
+                const x = 1 / times[i];
+                const y = powers[i];
+                sumX += x;
+                sumY += y;
+                sumXY += x * y;
+                sumX2 += x * x;
+            }
 
-/**
- * Dibuja o actualiza la gráfica de la curva Potencia-Duración.
- */
-function updateChart(CP, Wbal, times, powers) {
-    const ctx = document.getElementById('powerChart').getContext('2d');
-    if (powerChart) powerChart.destroy();
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
 
-    powerChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            datasets: [{
-                label: 'Curva Potencia-Duración',
-                data: Array.from({length: 200}, (_, i) => {
-                    const t = Math.exp(Math.log(1) + (Math.log(5400) * i) / 199);
-                    return {x: t, y: CP + (Wbal / t)};
-                }),
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.1,
-                pointRadius: 0,
-                fill: true
-            }, {
-                label: 'Potencia Crítica (CP)',
-                data: [{x: 1, y: CP}, {x: 5400, y: CP}],
-                borderColor: 'rgba(239, 68, 68, 1)',
-                borderDash: [5, 5],
-                pointRadius: 0,
-                fill: false
-            }, {
-                label: 'Puntos de Test',
-                data: times.map((t, i) => ({x: t, y: powers[i]})),
-                type: 'scatter',
-                backgroundColor: '#10b981',
-                pointRadius: 6,
-                pointHoverRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    type: 'logarithmic',
-                    title: {display: true, text: 'Tiempo (segundos)', font: {size: 14}},
-                    min: 1, max: 5400,
-                    ticks: {
-                        callback: function(value, index, ticks) {
-                            if ([1, 10, 60, 300, 1200, 3600].includes(value)) {
-                                return value < 60 ? `${value}s` : `${Math.floor(value/60)}min`;
+            const CP = intercept;
+            const Wbal_joules = slope;
+            const Wbal_kj = Wbal_joules / 1000;
+
+            const CS = calculateCriticalSpeed(CP, mass);
+            const paceSec = 1000 / CS;
+            const paceMin = Math.floor(paceSec / 60);
+            const paceRemSec = Math.round(paceSec % 60).toString().padStart(2, '0');
+            const pace = `${paceMin}:${paceRemSec}`;
+
+            // Calculate model accuracy
+            const predictedPowers = times.map(t => CP + (Wbal_joules / t));
+            const meanPower = powers.reduce((sum, p) => sum + p, 0) / n;
+            let ssTotal = powers.reduce((sum, p) => sum + Math.pow(p - meanPower, 2), 0);
+            let ssResidual = powers.reduce((sum, p, i) => sum + Math.pow(p - predictedPowers[i], 2), 0);
+            const rSquared = 1 - (ssResidual / ssTotal);
+            const standardError = Math.sqrt(ssResidual / (n - 2));
+
+            // Update results in the UI
+            document.getElementById('cpResult').textContent = CP.toFixed(1);
+            document.getElementById('wbalResult').textContent = Wbal_kj.toFixed(1);
+            document.getElementById('csResult').textContent = CS.toFixed(2);
+            document.getElementById('paceResult').textContent = pace;
+            document.getElementById('r2Result').textContent = rSquared.toFixed(3);
+            document.getElementById('seResult').textContent = standardError.toFixed(1);
+
+            document.getElementById('resultsSection').classList.remove('hidden');
+            updateChart(CP, Wbal_joules, times, powers);
+        }
+
+        /**
+         * Draws or updates the Power-Duration curve chart.
+         */
+        function updateChart(CP, Wbal, times, powers) {
+            const ctx = document.getElementById('powerChart').getContext('2d');
+            if (powerChart) powerChart.destroy();
+
+            const chartTextColor = '#9CA3AF'; // Light gray for text
+
+            powerChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Power-Duration Curve',
+                        data: Array.from({ length: 200 }, (_, i) => {
+                            const t = Math.exp(Math.log(1) + (Math.log(5400) * i) / 199);
+                            return { x: t, y: CP + (Wbal / t) };
+                        }),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        tension: 0.1,
+                        pointRadius: 0,
+                        fill: true
+                    }, {
+                        label: 'Critical Power (CP)',
+                        data: [{ x: 1, y: CP }, { x: 5400, y: CP }],
+                        borderColor: 'rgba(239, 68, 68, 0.8)',
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Test Points',
+                        data: times.map((t, i) => ({ x: t, y: powers[i] })),
+                        type: 'scatter',
+                        backgroundColor: '#10b981',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: chartTextColor
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'logarithmic',
+                            title: { display: true, text: 'Time (seconds)', font: { size: 14 }, color: chartTextColor },
+                            min: 1,
+                            max: 5400,
+                            ticks: {
+                                color: chartTextColor,
+                                callback: function(value, index, ticks) {
+                                    if ([1, 10, 60, 300, 1200, 3600].includes(value)) {
+                                        return value < 60 ? `${value}s` : `${Math.floor(value/60)}min`;
+                                    }
+                                }
+                            },
+                             grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            title: { display: true, text: 'Power (W)', font: { size: 14 }, color: chartTextColor },
+                            beginAtZero: false,
+                            suggestedMax: Math.max(...powers) * 1.2,
+                            ticks: {
+                                color: chartTextColor
+                            },
+                             grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
                             }
                         }
                     }
-                },
-                y: {
-                    title: {display: true, text: 'Potencia (W)', font: {size: 14}},
-                    beginAtZero: true,
-                    max: 1200
                 }
-            }
+            });
         }
-    });
-}
-</script>
+    </script>
 </body>
 </html>
