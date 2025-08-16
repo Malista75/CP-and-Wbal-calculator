@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- Custom Styles (matching PaceAndPower page) -->
+    <!-- Custom Styles -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -50,7 +50,7 @@
             <span class="gradient-text">Critical Power Calculator</span>
         </h1>
         <p class="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-            Calculate your Critical Power (CP), W' Balance, and Critical Speed (CS) to estimate your race paces.
+            Calculate your Critical Power (CP), W' Balance, and Critical Speed (CS) to estimate your race paces and log your progress.
         </p>
          <div class="mt-8">
             <a href="https://malista75.github.io/GAPandPower-GarminIQ/" target="_blank" class="text-blue-400 hover:text-blue-500 font-semibold py-3 px-8 text-lg transition-colors">
@@ -101,10 +101,13 @@
             </div>
         </div>
 
-        <!-- Calculate Button -->
-        <div class="flex justify-center mb-8">
+        <!-- Action Buttons -->
+        <div class="flex justify-center items-center gap-4 mb-8">
             <button onclick="calculateCP()" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-md transform hover:scale-105">
                 Calculate
+            </button>
+            <button id="saveButton" onclick="saveResults()" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors shadow-md transform hover:scale-105 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
+                Save Results
             </button>
         </div>
 
@@ -136,7 +139,31 @@
         </div>
     </main>
 
-    <!-- NEW: Explanation Section -->
+    <!-- NEW: Data Log Section -->
+    <section id="dataLog" class="max-w-6xl mx-auto px-4 py-12 hidden">
+        <h2 class="text-4xl font-bold text-center mb-10">Calculation History</h2>
+        <div class="card overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead class="bg-gray-800">
+                    <tr>
+                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-white">Date</th>
+                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-white">CP (W)</th>
+                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-white">W' (kJ)</th>
+                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-white">CS (m/s)</th>
+                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-white">Pace</th>
+                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-white">Test 1 (P/T)</th>
+                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-white">Test 2 (P/T)</th>
+                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-white">Test 3 (P/T)</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody" class="divide-y divide-gray-800 bg-gray-900">
+                    <!-- Data rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Explanation Section -->
     <section id="explanation" class="max-w-4xl mx-auto px-4 py-12">
         <h2 class="text-4xl font-bold text-center mb-10">Understanding Your Results</h2>
         <div class="space-y-10">
@@ -167,13 +194,121 @@
             </div>
         </div>
     </section>
-    <!-- End of New Section -->
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- IMPORTANT ---
+        // Replace this with the configuration object from your Firebase project's settings.
+        const firebaseConfig = {
+        apiKey: "AIzaSyDr4bd1uDXs4HkrNf1sBxxB3Cr2T6JiAZg",
+        authDomain: "cp-and-wbal-calculator.firebaseapp.com",
+        projectId: "cp-and-wbal-calculator",
+        storageBucket: "cp-and-wbal-calculator.firebasestorage.app",
+        messagingSenderId: "754696998672",
+        appId: "1:754696998672:web:af6be0599b0c3398051f95",
+        measurementId: "G-Z6NG7VPHNH"
+        };
+        
+        // This logic allows the app to use a special config when run in certain environments.
+        // For your local file, it will use the firebaseConfig object you provide above.
+        const finalFirebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig;
+
+        // Initialize Firebase
+        const app = initializeApp(finalFirebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let userId = null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Listen for auth state changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in.
+                userId = user.uid;
+                console.log("User signed in with UID:", userId);
+                loadResults(); // Load user's data once authenticated
+            } else {
+                // User is signed out. Sign in anonymously.
+                signInAnonymously(auth).catch((error) => {
+                    console.error("Anonymous sign-in failed:", error);
+                    showError("Could not connect to the database for data logging.");
+                });
+            }
+        });
+
+        // Make functions globally available for onclick handlers
+        window.saveResults = async () => {
+            if (!window.currentResults || !userId) {
+                showError("No results to save or user not authenticated.");
+                return;
+            }
+
+            try {
+                const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/calculations`), window.currentResults);
+                console.log("Document written with ID: ", docRef.id);
+                document.getElementById('saveButton').disabled = true; // Disable after saving
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showError("Failed to save results to the database.");
+            }
+        };
+
+        function loadResults() {
+            if (!userId) return;
+
+            const logTableBody = document.getElementById('logTableBody');
+            const dataLogSection = document.getElementById('dataLog');
+            
+            const q = query(collection(db, `/artifacts/${appId}/users/${userId}/calculations`));
+
+            onSnapshot(q, (querySnapshot) => {
+                const calculations = [];
+                querySnapshot.forEach((doc) => {
+                    calculations.push(doc.data());
+                });
+
+                // Sort data by timestamp, newest first
+                calculations.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
+
+                logTableBody.innerHTML = ''; // Clear previous data
+
+                if (calculations.length > 0) {
+                    dataLogSection.classList.remove('hidden');
+                } else {
+                    dataLogSection.classList.add('hidden');
+                }
+
+                calculations.forEach(data => {
+                    const row = logTableBody.insertRow();
+                    const date = new Date(data.timestamp.seconds * 1000).toLocaleString();
+                    row.innerHTML = `
+                        <td class="whitespace-nowrap py-4 px-3 text-sm text-gray-300">${date}</td>
+                        <td class="whitespace-nowrap py-4 px-3 text-sm text-gray-300">${data.cp.toFixed(1)}</td>
+                        <td class="whitespace-nowrap py-4 px-3 text-sm text-gray-300">${data.wbal.toFixed(1)}</td>
+                        <td class="whitespace-nowrap py-4 px-3 text-sm text-gray-300">${data.cs.toFixed(2)}</td>
+                        <td class="whitespace-nowrap py-4 px-3 text-sm text-gray-300">${data.pace}</td>
+                        <td class="whitespace-nowrap py-4 px-3 text-sm text-gray-300">${data.inputs.powers[0]}W / ${data.inputs.times[0]}s</td>
+                        <td class="whitespace-nowrap py-4 px-3 text-sm text-gray-300">${data.inputs.powers[1]}W / ${data.inputs.times[1]}s</td>
+                        <td class="whitespace-nowrap py-4 px-3 text-sm text-gray-300">${data.inputs.powers[2]}W / ${data.inputs.times[2]}s</td>
+                    `;
+                });
+            });
+        }
+    </script>
 
     <script>
         let powerChart = null;
         const errorDiv = document.getElementById('error-message');
         const errorText = document.getElementById('error-text');
+        
+        // Store current results to be saved
+        window.currentResults = null;
 
         /**
          * Displays an error message on the page.
@@ -303,6 +438,23 @@
             document.getElementById('paceResult').textContent = pace;
             document.getElementById('r2Result').textContent = rSquared.toFixed(3);
             document.getElementById('seResult').textContent = standardError.toFixed(1);
+            
+            // Store results for saving
+            window.currentResults = {
+                cp: CP,
+                wbal: Wbal_kj,
+                cs: CS,
+                pace: pace,
+                inputs: {
+                    mass: mass,
+                    powers: powers,
+                    times: times
+                },
+                timestamp: new Date() // Will be converted to Firestore Timestamp on save
+            };
+            
+            // Enable the save button
+            document.getElementById('saveButton').disabled = false;
 
             document.getElementById('resultsSection').classList.remove('hidden');
             updateChart(CP, Wbal_joules, times, powers);
@@ -372,7 +524,7 @@
                                 }
                             },
                              grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                 color: 'rgba(255, 255, 255, 0.1)'
                             }
                         },
                         y: {
@@ -383,7 +535,7 @@
                                 color: chartTextColor
                             },
                              grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                 color: 'rgba(255, 255, 255, 0.1)'
                             }
                         }
                     }
